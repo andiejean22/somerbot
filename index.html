@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Somerbot – Somerled Designs</title>
+<style>
+  :root {
+    --teal: #184B59;
+    --teal-light: #1e5e70;
+    --teal-dark: #0f3340;
+    --teal-pale: #DDF4F8;
+    --salmon: #CF7A6F;
+    --blush: #EFCAC0;
+    --cream: #EFF1CF;
+    --sage: #C8CB9A;
+    --gold: #DDB051;
+    --white: #FFFFFF;
+    --gray-50: #f8f9fa;
+    --gray-100: #f0f2f3;
+    --gray-200: #e2e6e9;
+    --gray-400: #9aacb3;
+    --gray-600: #5a6e76;
+    --gray-800: #2c3e45;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-800);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  header {
+    background: var(--teal);
+    padding: 0 28px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    box-shadow: 0 2px 10px rgba(24,75,89,0.3);
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo-svg { height: 28px; width: auto; }
+  .logo-wordmark {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: 4px;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  .logo-divider {
+    width: 1px; height: 28px;
+    background: rgba(255,255,255,0.3);
+  }
+  .bot-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--teal-pale);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #4ade80;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot { 0%,100%{opacity:1}50%{opacity:.4} }
+  .status-label { font-size: 12px; color: rgba(255,255,255,0.65); }
+
+  .chat-container {
+    flex: 1; overflow-y: auto;
+    padding: 24px 20px;
+    display: flex; flex-direction: column; gap: 20px;
+    scroll-behavior: smooth;
+  }
+  .chat-container::-webkit-scrollbar { width: 5px; }
+  .chat-container::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 10px; }
+
+  .message-row { display: flex; gap: 10px; max-width: 760px; margin: 0 auto; width: 100%; }
+  .message-row.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; margin-top: 2px;
+  }
+  .avatar.bot { background: var(--teal); color: var(--white); font-size: 14px; }
+  .avatar.user { background: var(--blush); color: var(--teal); }
+
+  .bubble {
+    max-width: 80%; padding: 13px 17px;
+    border-radius: 20px; font-size: 14.5px; line-height: 1.65;
+  }
+  .bubble.bot {
+    background: var(--white); color: var(--gray-800);
+    border: 1px solid var(--gray-200);
+    border-top-left-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .bubble.user {
+    background: var(--teal); color: var(--white);
+    border-top-right-radius: 4px;
+  }
+  .bubble p { margin-bottom: 8px; }
+  .bubble p:last-child { margin-bottom: 0; }
+  .bubble ul, .bubble ol { padding-left: 18px; margin: 6px 0; }
+  .bubble li { margin-bottom: 4px; }
+  .bubble strong { font-weight: 600; }
+  .bubble a { color: var(--teal); border-bottom: 1px solid rgba(24,75,89,.3); text-decoration: none; }
+  .bubble a:hover { border-bottom-color: var(--teal); }
+  .bubble.user a { color: var(--teal-pale); border-bottom-color: rgba(221,244,248,.4); }
+
+  .source-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    margin-top: 10px; padding: 4px 10px;
+    background: var(--teal-pale); color: var(--teal);
+    border-radius: 20px; font-size: 11.5px; font-weight: 600;
+  }
+
+  .typing-indicator {
+    display: flex; align-items: center; gap: 5px;
+    padding: 13px 17px;
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 20px; border-top-left-radius: 4px;
+    width: fit-content;
+  }
+  .typing-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--gray-400);
+    animation: typing-bounce 1.2s ease-in-out infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: .2s; }
+  .typing-dot:nth-child(3) { animation-delay: .4s; }
+  @keyframes typing-bounce { 0%,80%,100%{transform:translateY(0);opacity:.4} 40%{transform:translateY(-6px);opacity:1} }
+
+  .welcome-card {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: 20px; padding: 24px 26px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    max-width: 760px; margin: 0 auto; width: 100%;
+  }
+  .welcome-logo-row { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .welcome-bot-icon {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--teal); color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; flex-shrink: 0;
+  }
+  .welcome-title { font-size: 18px; font-weight: 700; color: var(--teal); }
+  .welcome-sub { font-size: 14px; color: var(--gray-600); margin-bottom: 18px; line-height: 1.6; }
+  .suggestion-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    background: var(--gray-50); border: 1.5px solid var(--gray-200);
+    color: var(--teal); padding: 8px 15px; border-radius: 20px;
+    font-size: 13px; cursor: pointer; transition: all .15s; font-weight: 500;
+  }
+  .chip:hover { background: var(--teal-pale); border-color: var(--teal); }
+
+  .input-area {
+    flex-shrink: 0; padding: 14px 20px 18px;
+    background: var(--white); border-top: 1px solid var(--gray-200);
+  }
+  .input-wrapper { max-width: 760px; margin: 0 auto; display: flex; gap: 10px; align-items: flex-end; }
+  .input-box {
+    flex: 1; background: var(--gray-50);
+    border: 1.5px solid var(--gray-200);
+    border-radius: 28px; padding: 12px 18px;
+    font-size: 14.5px; font-family: inherit;
+    color: var(--gray-800); resize: none;
+    min-height: 48px; max-height: 140px;
+    overflow-y: auto; transition: border-color .2s; outline: none; line-height: 1.5;
+  }
+  .input-box:focus { border-color: var(--teal); background: var(--white); }
+  .input-box::placeholder { color: var(--gray-400); }
+  .send-btn {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: var(--teal); border: none;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: background .15s, transform .1s; margin-bottom: 1px;
+  }
+  .send-btn:hover { background: var(--teal-light); }
+  .send-btn:active { transform: scale(.94); }
+  .send-btn:disabled { background: var(--gray-200); cursor: not-allowed; }
+  .send-btn svg { width: 18px; height: 18px; fill: white; }
+  .input-hint {
+    text-align: center; font-size: 11.5px; color: var(--gray-400);
+    margin-top: 8px; max-width: 760px; margin-left: auto; margin-right: auto;
+  }
+  .error-bubble {
+    background: #fff5f5; border: 1px solid #fecaca;
+    border-radius: 14px; padding: 12px 16px;
+    color: #c0392b; font-size: 14px;
+  }
+  @media(max-width:600px){
+    header{padding:0 16px;}
+    .chat-container{padding:16px 12px;}
+    .input-area{padding:12px 12px 16px;}
+    .bubble{max-width:90%;font-size:14px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <svg class="logo-svg" viewBox="0 0 400 80" xmlns="http://www.w3.org/2000/svg" fill="white">
+      <text x="0" y="62" font-family="'Segoe UI',sans-serif" font-size="72" font-weight="800" letter-spacing="8" fill="white">SOMERLED</text>
+    </svg>
+    <div class="logo-divider"></div>
+    <span class="bot-name">Somerbot</span>
+  </div>
+  <div class="header-right">
+    <div class="status-dot"></div>
+    <span class="status-label">Online</span>
+  </div>
+</header>
+
+<div class="chat-container" id="chatContainer">
+  <div class="welcome-card">
+    <div class="welcome-logo-row">
+      <div class="welcome-bot-icon">S</div>
+      <div class="welcome-title">Hi! I'm Somerbot.</div>
+    </div>
+    <p class="welcome-sub">Your go-to assistant for Somerled Designs SOPs and processes. Ask me anything about our procedures, policies, or how to handle a specific situation — I'll find the right guidance from our team's resources.</p>
+    <div class="suggestion-chips">
+      <button class="chip" onclick="sendChip(this)">How do I process an invoice?</button>
+      <button class="chip" onclick="sendChip(this)">What's the onboarding process for new clients?</button>
+      <button class="chip" onclick="sendChip(this)">How do I handle a client complaint?</button>
+      <button class="chip" onclick="sendChip(this)">What are our communication guidelines?</button>
+      <button class="chip" onclick="sendChip(this)">How do I submit a time-off request?</button>
+      <button class="chip" onclick="sendChip(this)">What's the STR design process?</button>
+    </div>
+  </div>
+</div>
+
+<div class="input-area">
+  <div class="input-wrapper">
+    <textarea class="input-box" id="userInput"
+      placeholder="Ask about any Somerled process or policy…"
+      rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+  <div class="input-hint">Answers are sourced directly from Somerled's SOPs in Monday.com</div>
+</div>
+
+<script>
+// ── Board configuration ──────────────────────────────────────────────────────
+const BOARD_CONFIGS = [
+  { id: 8181137306, name: "General Training Topics & Policies",
+    filterCol: "boolean_mkvkh364", filterType: "checkbox",
+    sopCol: "monday_doc_mkkzsyws", fallbackCols: ["file_mkkz96bf"] },
+  { id: 7378720905, name: "Sales Team Onboarding",
+    filterCol: "color_mkwf6wae", filterType: "status", filterVal: "Accurate",
+    sopCol: "creative_brief__1", fallbackCols: ["file_mknrfb2v","link__1"] },
+  { id: 8301325991, name: "Design Team Onboarding",
+    filterCol: "confirmation", filterType: "status", filterVal: "Accurate",
+    sopCol: "sop", fallbackCols: ["video_documents","videos_links"] },
+  { id: 18394776184, name: "Training Board A",
+    filterCol: "confirmation", filterType: "status", filterVal: "Accurate",
+    sopCol: "written_training", fallbackCols: ["videos_links"] },
+  { id: 18398860758, name: "Training Board B",
+    filterCol: "confirmation", filterType: "status", filterVal: "Accurate",
+    sopCol: "sop", fallbackCols: ["videos_doc_links"] },
+  { id: 8334640628, name: "Board 8334640628",
+    filterCol: "confirmation", filterType: "status", filterVal: "Accurate",
+    sopCol: "sop", fallbackCols: ["video_documents"] },
+  { id: 8371383521, name: "Board 8371383521",
+    filterCol: "updated_q2", filterType: "status", filterVal: "Accurate",
+    sopCol: "sop", fallbackCols: [] },
+  { id: 8780045996, name: "Board 8780045996",
+    filterCol: "confirmation", filterType: "status", filterVal: "Accurate",
+    sopCol: "sop", fallbackCols: ["video_documents"] },
+  { id: 9144069716, name: "Board 9144069716",
+    filterCol: "confirmation", filterType: "status", filterVal: "Accurate",
+    sopCol: "sop", fallbackCols: ["video_documents"] },
+  { id: 8323121995, name: "Board 8323121995",
+    filterCol: "confirmation", filterType: "status", filterVal: "Accurate",
+    sopCol: "sop", fallbackCols: ["video_documents"] },
+  { id: 8391848979, name: "Board 8391848979",
+    filterCol: "confirmation", filterType: "status", filterVal: "Accurate",
+    sopCol: "sop", fallbackCols: ["video_documents"] },
+  { id: 8320961545, name: "Board 8320961545",
+    filterCol: "confirmation", filterType: "status", filterVal: "Accurate",
+    sopCol: "sop", fallbackCols: ["video_docs_links"] },
+  { id: 8305987910, name: "Board 8305987910",
+    filterCol: "confirmation", filterType: "status", filterVal: "Accurate",
+    sopCol: "sop", fallbackCols: ["video_documents"] },
+  { id: 8557365995, name: "Board 8557365995",
+    filterCol: "confirmation", filterType: "status", filterVal: "Accurate",
+    sopCol: "sop", fallbackCols: ["video_documents"] },
+  { id: 9997244305, name: "Board 9997244305",
+    filterCol: "confirmation", filterType: "status", filterVal: "Accurate",
+    sopCol: "written_steps", fallbackCols: ["documents"] }
+];
+
+const BOARD_IDS = BOARD_CONFIGS.map(b => b.id);
+
+// ── System prompt ────────────────────────────────────────────────────────────
+const SYSTEM_PROMPT = `You are Somerbot, the internal AI assistant for Somerled Designs employees. Your job is to answer employee questions using the company's SOPs (Standard Operating Procedures) retrieved from Monday.com.
+
+INSTRUCTIONS:
+- Only answer based on the SOP data provided. Do not invent procedures.
+- If a relevant SOP or document link is found, summarize the key steps clearly.
+- If multiple SOPs are relevant, reference all of them.
+- If no SOP is found for the topic, honestly say so and suggest the employee contact their manager.
+- Be warm, clear, and concise. Use numbered lists for step-by-step processes.
+- When referencing a document or link, include it formatted as: 📄 [Document Name](URL)
+- Address employees in second person ("you") with a professional but friendly tone.
+- You are Somerbot — do not reveal you are powered by Claude or Anthropic.
+- Do not discuss anything outside of Somerled Designs work processes and policies.
+
+RESPONSE FORMAT:
+1. Give a direct answer first (1-2 sentences)
+2. Step-by-step instructions if applicable (numbered list)
+3. Any relevant links or documents at the end`;
+
+let conversationHistory = [];
+let isLoading = false;
+
+// ── Fetch SOP context from Monday.com via MCP ────────────────────────────────
+async function fetchSOPContext(question) {
+  const boardList = BOARD_CONFIGS.map(b =>
+    `Board ${b.id} ("${b.name}"): filter by ${b.filterType === 'checkbox' ? '"Uploaded to Somerbot" checkbox checked' : `${b.filterCol} = "${b.filterVal}"`}; SOP column: "${b.sopCol}"${b.fallbackCols.length ? `; fallback: ${b.fallbackCols.join(', ')}` : ''}`
+  ).join('\n');
+
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      system: `You are a Monday.com data retrieval assistant for Somerled Designs. Search the following boards for SOPs relevant to the employee's question. Return a JSON summary of relevant items found.
+
+BOARDS:
+${boardList}
+
+Search for items related to the question and return JSON like:
+{"items": [{"name": "...", "board": "...", "group": "...", "content": "...", "links": ["url1"], "sopUrl": "url or null"}]}
+
+Return ONLY valid JSON, no other text. If nothing relevant found, return {"items": []}`,
+      messages: [{ role: "user", content: `Employee question: "${question}"` }],
+      mcp_servers: [{ type: "url", url: "https://mcp.monday.com/mcp", name: "monday-mcp" }]
+    })
+  });
+
+  const data = await resp.json();
+  // Extract text blocks (MCP may return multiple content blocks)
+  const textBlocks = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
+  return textBlocks || "{}";
+}
+
+// ── Main ask function ────────────────────────────────────────────────────────
+async function askSomerbot(question) {
+  let sopContext = "";
+  try {
+    sopContext = await fetchSOPContext(question);
+  } catch(e) {
+    sopContext = '{"error": "Could not reach Monday.com"}';
+  }
+
+  conversationHistory.push({ role: "user", content: question });
+
+  // Build messages including SOP context
+  const messagesForClaude = conversationHistory.slice(0, -1).concat([{
+    role: "user",
+    content: `Employee question: "${question}"\n\nSOP data retrieved from Monday.com boards:\n${sopContext}\n\nPlease answer the employee's question using this SOP data.`
+  }]);
+
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      system: SYSTEM_PROMPT,
+      messages: messagesForClaude
+    })
+  });
+
+  const data = await resp.json();
+  const answer = data.content?.[0]?.text || "I'm sorry, I wasn't able to generate a response. Please try again.";
+  conversationHistory.push({ role: "assistant", content: answer });
+  return answer;
+}
+
+// ── Markdown parser ──────────────────────────────────────────────────────────
+function parseMarkdown(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+    .replace(/^#{1,3}\s(.+)$/gm, '<strong>$1</strong>')
+    .split('\n')
+    .map(line => {
+      if (/^\d+\.\s/.test(line)) return `<li style="list-style-type:decimal">${line.replace(/^\d+\.\s/, '')}</li>`;
+      if (/^[-•📄]\s/.test(line)) return `<li>${line.replace(/^[-•📄]\s/, '')}</li>`;
+      if (line.trim() === '') return '';
+      return `<p>${line}</p>`;
+    })
+    .join('')
+    .replace(/(<li[^>]*>.*?<\/li>\s*)+/gs, m => `<ul style="padding-left:18px;margin:6px 0">${m}</ul>`);
+}
+
+// ── DOM helpers ──────────────────────────────────────────────────────────────
+function addMessage(content, role, showSource = false) {
+  const container = document.getElementById('chatContainer');
+  const row = document.createElement('div');
+  row.className = `message-row ${role}`;
+
+  const avatar = document.createElement('div');
+  avatar.className = `avatar ${role}`;
+  avatar.textContent = role === 'bot' ? 'S' : 'ME';
+
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${role}`;
+
+  if (role === 'bot') {
+    bubble.innerHTML = parseMarkdown(content);
+    if (showSource) {
+      const tag = document.createElement('div');
+      tag.className = 'source-tag';
+      tag.innerHTML = `📋 Sourced from Somerled SOPs`;
+      bubble.appendChild(tag);
+    }
+  } else {
+    bubble.textContent = content;
+  }
+
+  row.appendChild(avatar);
+  row.appendChild(bubble);
+  container.appendChild(row);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+  const container = document.getElementById('chatContainer');
+  const row = document.createElement('div');
+  row.className = 'message-row bot'; row.id = 'typingRow';
+  const av = document.createElement('div');
+  av.className = 'avatar bot'; av.textContent = 'S';
+  const ind = document.createElement('div');
+  ind.className = 'typing-indicator';
+  ind.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  row.appendChild(av); row.appendChild(ind);
+  container.appendChild(row);
+  container.scrollTop = container.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('typingRow');
+  if (el) el.remove();
+}
+
+// ── Send flow ────────────────────────────────────────────────────────────────
+async function sendMessage() {
+  if (isLoading) return;
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = ''; input.style.height = 'auto';
+  isLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  addMessage(text, 'user');
+  showTyping();
+
+  try {
+    const answer = await askSomerbot(text);
+    hideTyping();
+    addMessage(answer, 'bot', true);
+  } catch(err) {
+    hideTyping();
+    const container = document.getElementById('chatContainer');
+    const row = document.createElement('div');
+    row.className = 'message-row bot';
+    row.innerHTML = `<div class="avatar bot">S</div><div class="error-bubble">Something went wrong while fetching your answer. Please try again or contact your manager directly.</div>`;
+    container.appendChild(row);
+    container.scrollTop = 99999;
+  }
+
+  isLoading = false;
+  document.getElementById('sendBtn').disabled = false;
+  input.focus();
+}
+
+function sendChip(btn) {
+  document.getElementById('userInput').value = btn.textContent;
+  btn.closest('.welcome-card').style.opacity = '0.5';
+  btn.closest('.welcome-card').style.pointerEvents = 'none';
+  sendMessage();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+}
+</script>
+</body>
+</html>
